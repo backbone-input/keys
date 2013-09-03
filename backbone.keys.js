@@ -101,8 +101,9 @@
 
         // Override delegate events
         delegateEvents : function() {
-            oldDelegateEvents.apply(this, arguments);
+            oldDelegateEvents.apply(this, Array.prototype.slice.apply(arguments));
             this.delegateKeys();
+            return this;
         },
 
         // Clears all callbacks previously bound to the view with `delegateEvents`.
@@ -111,6 +112,7 @@
         undelegateEvents: function() {
             this.undelegateKeys();
             oldUndelegateEvents.apply(this, arguments);
+            return this;
         },
 
         // Actual delegate keys
@@ -120,7 +122,7 @@
             if (!this.bindTo) {
                 this.bindTo = (this.bindKeysScoped || typeof $ === "undefined") ? this.$el : $(document);
             }
-            this.bindTo.on(this.bindKeysOn, _.bind(this.triggerKey, this));
+            this.bindTo.on(this.bindKeysOn + '.delegateKeys' + this.cid, _.bind(this.triggerKey, this));
 
             keys = keys || (this.keys);
             if (keys) {
@@ -128,11 +130,16 @@
                     this.keyOn(key, method);
                 }, this);
             }
+            return this;
         },
 
         // Undelegate keys
         undelegateKeys : function() {
             this._keyEventBindings = {};
+            if (this.bindTo) {
+                this.bindTo.off(this.bindKeysOn + '.delegateKeys' + this.cid);
+            }
+            return this;
         },
 
         // Utility to get the name of a key
@@ -161,6 +168,7 @@
                 }
                 if (trigger) listener.method(e, listener.key);
             });
+            return this;
         },
 
         // Doing the real work of binding key events
