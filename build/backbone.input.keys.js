@@ -2,7 +2,7 @@
  * @name backbone.input.keys
  * Key event bindings for Backbone views
  *
- * Version: 0.3.0 (Mon, 31 Mar 2014 10:06:04 GMT)
+ * Version: 0.4.0 (Sat, 05 Apr 2014 02:21:37 GMT)
  * Homepage: https://github.com/backbone-input/keys
  *
  * @author makesites
@@ -12,22 +12,15 @@
  * @license Dual-licensed: MIT license
  */
 
-(function (factory) {
-	"use strict";
-
-	if (typeof define === 'function' && define.amd) {
-		// AMD. Register as an anonymous module.
-		define(['underscore', 'backbone', 'jquery'], factory);
-	} else {
-		// Browser globals
-		factory(_, Backbone, $);
-	}
-}(function (_, Backbone, $) {
-	"use strict";
+(function(w, _, Backbone, APP) {
+	//"use strict";
 
 	// Alias the libraries from the global object
 	var oldDelegateEvents = Backbone.View.prototype.delegateEvents;
 	var oldUndelegateEvents = Backbone.View.prototype.undelegateEvents;
+
+	var isAPP = ( typeof APP !== "undefined" && typeof APP.View !== "undefined" );
+	var View = ( isAPP ) ? APP.View : Backbone.View;
 
 
 
@@ -86,9 +79,18 @@
 		BackboneKeysMap[alias] = BackboneKeysMap[real];
 	});
 
+// extend existing params
+var params = View.prototype.params || new Backbone.Model();
+
+// defaults
+params.set({
+	keys: {} // a list of all the keys pressed
+});
 
 
-	Backbone.View = Backbone.View.extend({
+	var Keys = View.extend({
+
+		params: params,
 
 		// Allow pr view what specific event to use
 		// Keydown is defaulted as it allows for press-and-hold
@@ -195,6 +197,11 @@
 			var components = key.split('+');
 			key = components.shift();
 
+			// add the key in the params
+			var params = this.params.get("keys");
+			params[key] = true;
+			this.params.set({ keys: params });
+			//
 			var keyCode = getKeyCode(key);
 
 			if (!this._keyEventBindings.hasOwnProperty(keyCode)) {
@@ -217,6 +224,11 @@
 				this._keyEventBindings = {};
 				return this;
 			}
+			// remove the key from the params
+			var params = this.params.get("keys");
+			delete params[key];
+			this.params.set({ keys: params });
+			//
 			var keyCode = getKeyCode(key);
 			if (!_.isFunction(method)) method = this[method];
 			if (!method) {
@@ -240,5 +252,36 @@
 
 
 
-	return Backbone;
-}));
+	// fallbacks
+	if( _.isUndefined( Backbone.Input ) ) Backbone.Input = {};
+	Backbone.Input.Keys = Keys;
+
+	// Support module loaders
+	if ( typeof module === "object" && module && typeof module.exports === "object" ) {
+		// Expose as module.exports in loaders that implement CommonJS module pattern.
+		module.exports = Keys;
+	} else {
+		// Register as a named AMD module, used in Require.js
+		if ( typeof define === "function" && define.amd ) {
+			define( [], function () { return Keys; } );
+		}
+	}
+	// If there is a window object, that at least has a document property
+	if ( typeof window === "object" && typeof window.document === "object" ) {
+		// update APP namespace
+		if( isAPP ){
+			APP.View = Keys;
+			APP.Input = APP.Input || {};
+			APP.Input.Keys = Backbone.Input.Keys;
+			// save namespace
+			window.APP = APP;
+		} else {
+			// update Backbone namespace
+			Backbone.View = Keys;
+		}
+		// save Backbone namespace either way
+		window.Backbone = Backbone;
+	}
+
+
+})(this.window, this._, this.Backbone, this.APP);
