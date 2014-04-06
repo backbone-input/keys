@@ -2,7 +2,7 @@
  * @name backbone.input.keys
  * Key event bindings for Backbone views
  *
- * Version: 0.4.0 (Sat, 05 Apr 2014 02:21:37 GMT)
+ * Version: 0.4.0 (Sun, 06 Apr 2014 04:26:50 GMT)
  * Homepage: https://github.com/backbone-input/keys
  *
  * @author makesites
@@ -56,6 +56,46 @@
 		insert: 45,
 		'delete': 46,
 
+		// Alphabet
+		a: 65,
+		b: 66,
+		c: 67,
+		d: 68,
+		e: 69,
+		f: 70,
+		g: 71,
+		h: 72,
+		i: 73,
+		j: 74,
+		k: 75,
+		l: 76,
+		m: 77,
+		n: 78,
+		o: 79,
+		p: 80,
+		q: 81,
+		r: 82,
+		s: 83,
+		t: 84,
+		u: 85,
+		v: 86,
+		w: 87,
+		x: 88,
+		y: 89,
+		z: 90,
+
+		// Numbers
+		0: 48,
+		1: 49,
+		2: 50,
+		3: 51,
+		4: 52,
+		5: 53,
+		6: 54,
+		7: 55,
+		8: 56,
+		9: 57,
+
 		// F keys
 		f1: 112,
 		f2: 113,
@@ -94,7 +134,7 @@ params.set({
 
 		// Allow pr view what specific event to use
 		// Keydown is defaulted as it allows for press-and-hold
-		bindKeysOn : 'keydown',
+		bindKeysOn : ['keydown', 'keyup'],
 
 		// The Backbone-y way would be to have
 		// keys scoped to `this.el` as default,
@@ -128,12 +168,16 @@ params.set({
 
 		// Actual delegate keys
 		delegateKeys : function(keys) {
+			var self = this;
+
 			this.undelegateKeys();
 
 			if (!this.bindTo) {
 				this.bindTo = (this.bindKeysScoped || typeof $ === "undefined") ? this.$el : $(document);
 			}
-			this.bindTo.on(this.bindKeysOn + '.delegateKeys' + this.cid, _.bind(this.triggerKey, this));
+			_.each( this.bindKeysOn, function( bind ){
+				self.bindTo.on(bind + '.delegateKeys' + self.cid, _.bind(self.triggerKey, self));
+			});
 
 			keys = keys || (this.keys);
 			if (keys) {
@@ -146,9 +190,13 @@ params.set({
 
 		// Undelegate keys
 		undelegateKeys : function() {
+			var self = this;
+
 			this._keyEventBindings = {};
 			if (this.bindTo) {
-				this.bindTo.off(this.bindKeysOn + '.delegateKeys' + this.cid);
+				_.each( this.bindKeysOn, function( bind ){
+					self.bindTo.off(bind + '.delegateKeys' + self.cid);
+				});
 			}
 			return this;
 		},
