@@ -2,7 +2,7 @@
  * @name backbone.input.keys
  * Key event bindings for Backbone views
  *
- * Version: 0.4.0 (Sun, 06 Apr 2014 04:26:50 GMT)
+ * Version: 0.4.0 (Mon, 07 Apr 2014 03:16:14 GMT)
  * Homepage: https://github.com/backbone-input/keys
  *
  * @author makesites
@@ -150,6 +150,9 @@ params.set({
 		// Hash of bound listeners
 		_keyEventBindings : null,
 
+		// internal container for keys
+		_keys: {},
+
 		// Override delegate events
 		delegateEvents : function() {
 			oldDelegateEvents.apply(this, Array.prototype.slice.apply(arguments));
@@ -181,6 +184,7 @@ params.set({
 
 			keys = keys || (this.keys);
 			if (keys) {
+				this._keys = parseKeys( keys );
 				_.each(keys, function(method, key) {
 					this.keyOn(key, method);
 				}, this);
@@ -293,9 +297,24 @@ params.set({
 		}
 	});
 
+	// Private helpers
 	var getKeyCode = function(key) {
 		return (key.length === 1) ?
 			key.toUpperCase().charCodeAt(0) : BackboneKeysMap[key];
+	};
+
+	var parseKeys = function(keyset) {
+		var data = {};
+		_.each(keyset, function(method, keys) {
+			// convert to lowercase
+			keys = keys.toLowerCase();
+			// convert to array
+			keys = keys.split(' ');
+			// save with method as the key
+			data[method] = keys;
+		}, this);
+
+		return data;
 	};
 
 
