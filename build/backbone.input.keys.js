@@ -2,7 +2,7 @@
  * @name backbone.input.keys
  * Key event bindings for Backbone views
  *
- * Version: 0.4.0 (Mon, 07 Apr 2014 03:16:14 GMT)
+ * Version: 0.4.0 (Wed, 06 Aug 2014 06:47:33 GMT)
  * Homepage: https://github.com/backbone-input/keys
  *
  * @author makesites
@@ -294,6 +294,12 @@ params.set({
 				}
 			);
 			return this;
+		},
+
+		remove: function(){
+			// undelegate keys
+			this.undelegateKeys();
+			return View.prototype.remove.apply(this, arguments);
 		}
 	});
 
