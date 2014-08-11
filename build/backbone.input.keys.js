@@ -2,7 +2,7 @@
  * @name backbone.input.keys
  * Key event bindings for Backbone views
  *
- * Version: 0.4.0 (Wed, 06 Aug 2014 06:47:33 GMT)
+ * Version: 0.4.0 (Mon, 11 Aug 2014 06:20:58 GMT)
  * Homepage: https://github.com/backbone-input/keys
  *
  * @author makesites
@@ -129,6 +129,13 @@ params.set({
 
 
 	var Keys = View.extend({
+
+		options: {
+			monitor: [], // add "keys" to initiate monitoring
+			keys: {
+				pause: [] // limit the effect of these keys (temporarily)
+			}
+		},
 
 		params: params,
 
