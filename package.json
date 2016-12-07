@@ -1,6 +1,6 @@
 {
 	"name": "backbone.input.keys",
-	"version": "0.4.0",
+	"version": "0.4.5",
 	"author": "makesites",
 	"description": "Key event bindings for Backbone views",
 	"homepage": "https://github.com/backbone-input/keys",
