@@ -25,6 +25,7 @@ concat({
 	src : [
 		'lib/keys.js',
 		'lib/params.js',
+		'lib/state.js',
 		'lib/view.js',
 		'lib/helpers.js'
 	],
