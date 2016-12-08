@@ -2,7 +2,7 @@
  * @name backbone.input.keys
  * Key event bindings for Backbone views
  *
- * Version: 0.5.0 (Thu, 08 Dec 2016 09:56:16 GMT)
+ * Version: 0.5.0 (Thu, 08 Dec 2016 09:59:44 GMT)
  * Homepage: https://github.com/backbone-input/keys
  *
  * @author makesites
@@ -189,6 +189,20 @@ state.set({
 		// internal container for keys
 		_keys: {},
 
+		initialize: function( options ){
+			// fallbacks
+			options = options || {};
+			// extending options
+			this.options = _.extend({}, this.options, options );
+			// check monitor options
+			var monitor = this.options.monitorKeys || _.inArray("keys", this.options.monitor);
+			if( monitor ){
+				this.monitorKeys();
+			}
+
+			return View.prototype.initialize.call( this, options );
+		},
+
 		// Interface method(s)
 		onKeyPress: function( e ){
 
@@ -210,6 +224,7 @@ state.set({
 		},
 
 		// Override delegate events
+		/*
 		delegateEvents: function(){
 			oldDelegateEvents.apply(this, Array.prototype.slice.apply(arguments));
 			this.delegateKeys();
@@ -224,6 +239,7 @@ state.set({
 			oldUndelegateEvents.apply(this, arguments);
 			return this;
 		},
+		*/
 
 		// Actual delegate keys
 		delegateKeys: function( keys ){
