@@ -2,16 +2,15 @@
  * @name backbone.input.keys
  * Key event bindings for Backbone views
  *
- * Version: 0.4.5 (Wed, 07 Dec 2016 08:03:59 GMT)
+ * Version: 0.5.0 (Thu, 08 Dec 2016 09:56:16 GMT)
  * Homepage: https://github.com/backbone-input/keys
  *
  * @author makesites
- * Created by: Makis Tracend (@tracend)
+ * Initiated by Makis Tracend (@tracend)
  *
  * @cc_on Copyright © Makesites.org
- * @license Dual-licensed: MIT license
+ * @license MIT license
  */
-
 
 (function (lib) {
 
@@ -31,10 +30,10 @@
 		lib($, window._, window.Backbone);
 	}
 
-}(function (_, Backbone) {
+}(function ($, _, Backbone) {
 
 	// support for Backbone APP() view if available...
-	APP = APP || window.APP || null;
+	var APP = APP || window.APP || null;
 	var isAPP = ( APP !== null );
 	var View = ( isAPP && typeof APP.View !== "undefined" ) ? APP.View : Backbone.View;
 
@@ -146,6 +145,14 @@ var params = View.prototype.params || new Backbone.Model();
 params.set({
 	keys: {} // a list of all the keys pressed
 });
+// extend existing params
+var state = View.prototype.state || new Backbone.Model();
+
+// defaults
+state.set({
+	keypress: false
+});
+
 
 
 	var Keys = View.extend({
@@ -157,11 +164,13 @@ params.set({
 			}
 		},
 
-		params: params,
+		state: state.clone(),
+
+		params: params.clone(),
 
 		// Allow pr view what specific event to use
 		// Keydown is defaulted as it allows for press-and-hold
-		bindKeysOn : ['keydown', 'keyup'],
+		bindKeysOn: ['keydown', 'keyup'],
 
 		// The Backbone-y way would be to have
 		// keys scoped to `this.el` as default,
@@ -169,19 +178,39 @@ params.set({
 		// considering how you'd expect keyboard
 		// events to work
 		// But users should be able to choose themselves
-		bindKeysScoped : false,
+		bindKeysScoped: false,
 
 		// The actual element to bind events to
-		bindTo : null,
+		bindTo: null,
 
 		// Hash of bound listeners
-		_keyEventBindings : null,
+		_keyEventBindings: null,
 
 		// internal container for keys
 		_keys: {},
 
+		// Interface method(s)
+		onKeyPress: function( e ){
+
+		},
+
+		monitorKeys: function( state ){
+			// fallback
+			if(typeof state == "undefined") state = true;
+
+			if( state ){
+				this.delegateKeys();
+				// broadcast event
+				this.trigger('monitor-keys-on');
+			} else {
+				this.undelegateKeys();
+				// broadcast event
+				this.trigger('monitor-keys-off');
+			}
+		},
+
 		// Override delegate events
-		delegateEvents : function() {
+		delegateEvents: function(){
 			oldDelegateEvents.apply(this, Array.prototype.slice.apply(arguments));
 			this.delegateKeys();
 			return this;
@@ -190,29 +219,29 @@ params.set({
 		// Clears all callbacks previously bound to the view with `delegateEvents`.
 		// You usually don't need to use this, but may wish to if you have multiple
 		// Backbone views attached to the same DOM element.
-		undelegateEvents: function() {
+		undelegateEvents: function(){
 			this.undelegateKeys();
 			oldUndelegateEvents.apply(this, arguments);
 			return this;
 		},
 
 		// Actual delegate keys
-		delegateKeys : function(keys) {
+		delegateKeys: function( keys ){
 			var self = this;
 
 			this.undelegateKeys();
 
-			if (!this.bindTo) {
+			if( !this.bindTo ){
 				this.bindTo = (this.bindKeysScoped || typeof $ === "undefined") ? this.$el : $(document);
 			}
 			_.each( this.bindKeysOn, function( bind ){
-				self.bindTo.on(bind + '.delegateKeys' + self.cid, _.bind(self.triggerKey, self));
+				self.bindTo.on(bind + '.delegateKeys' + self.cid, _.bind(self._onKeyPress, self));
 			});
 
 			keys = keys || (this.keys);
-			if (keys) {
+			if( keys ){
 				this._keys = parseKeys( keys );
-				_.each(keys, function(method, key) {
+				_.each(keys, function( method, key ){
 					this.keyOn(key, method);
 				}, this);
 			}
@@ -220,7 +249,7 @@ params.set({
 		},
 
 		// Undelegate keys
-		undelegateKeys : function() {
+		undelegateKeys: function(){
 			var self = this;
 
 			this._keyEventBindings = {};
@@ -234,7 +263,7 @@ params.set({
 
 		// Utility to get the name of a key
 		// based on its keyCode
-		keyName : function(keyCode) {
+		keyName: function( keyCode ){
 			var keyName;
 			for (keyName in BackboneKeysMap)
 				if (BackboneKeysMap[keyName] === keyCode) return keyName;
@@ -243,7 +272,7 @@ params.set({
 
 		// Internal real listener for key events that
 		// forwards any relevant key presses
-		triggerKey : function(e) {
+		_onKeyPress: function( e ){
 			var key;
 			if (_.isObject(e)) key = e.which;
 			else if (_.isString(e)) key = getKeyCode(e);
@@ -258,11 +287,18 @@ params.set({
 				}
 				if (trigger) listener.method(e, listener.key);
 			});
+			// trigger event
+			this.trigger('key-press');
+			// update state
+			this.state.set('keypress', true); // check state from bindKeysOn
+			// app-specific logic
+			this.onKeyPress( e );
+			//
 			return this;
 		},
 
 		// Doing the real work of binding key events
-		keyOn : function(key, method) {
+		keyOn: function( key, method ){
 			key = key.split(' ');
 			if (key.length > 1) {
 				var l = key.length;
@@ -297,7 +333,7 @@ params.set({
 			return this;
 		},
 
-		keyOff : function(key, method) {
+		keyOff: function( key, method ){
 			method = (method || false);
 			if (key === null) {
 				this._keyEventBindings = {};
